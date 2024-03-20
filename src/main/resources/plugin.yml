@@ -1,0 +1,9 @@
+main: com.gmail.markushygedombrowski.HLVagtVault
+name: HLVagtVault
+version: 1.0
+author: Markus Hyge Dombrowski
+depend: []
+commands:
+  vagtvault:
+    aliases: ["vv"]
+    description: VagtVault Command
