@@ -4,6 +4,7 @@ import com.gmail.markushygedombrowski.items.RareItems;
 import org.bukkit.Location;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class VagtVault {
@@ -11,6 +12,7 @@ public class VagtVault {
     private Location location;
     private int resetTime;
     private int failresetTime;
+    private int standStillTime;
     private List<ItemStack> items;
     private List<ItemStack> heads;
     private List<RareItems> rareItems;
@@ -22,11 +24,12 @@ public class VagtVault {
     private int rareHeadChance;
 
 
-    public VagtVault(String name, Location location, int resetTime, int failresetTime, List<ItemStack> items, List<ItemStack> heads, List<RareItems> rareItems, List<ItemStack> rareHeads, int headChance, int rareHeadChance) {
+    public VagtVault(String name, Location location, int resetTime, int failresetTime, int standStillTime, List<ItemStack> items, List<ItemStack> heads, List<RareItems> rareItems, List<ItemStack> rareHeads, int headChance, int rareHeadChance) {
         this.name = name;
         this.location = location;
         this.resetTime = resetTime;
         this.failresetTime = failresetTime;
+        this.standStillTime = standStillTime;
         this.items = items;
         this.heads = heads;
         this.rareItems = rareItems;
@@ -34,9 +37,12 @@ public class VagtVault {
         this.headChance = headChance;
         this.rareHeadChance = rareHeadChance;
     }
-    public VagtVault(String name,Location location) {
+    public VagtVault(String name,Location location,int resetTime,int failresetTime,int standStillTime){
         this.name = name;
         this.location = location;
+        this.resetTime = resetTime;
+        this.failresetTime = failresetTime;
+        this.standStillTime = standStillTime;
     }
     public String getName() {
         return name;
@@ -116,5 +122,33 @@ public class VagtVault {
 
     public void setFailresetTime(int failresetTime) {
         this.failresetTime = failresetTime;
+    }
+
+    public boolean canBeCreated() {
+        return name != null && location != null && items != null;
+    }
+
+    public int getStandStillTime() {
+        return standStillTime;
+    }
+
+    public void setStandStillTime(int standStillTime) {
+        this.standStillTime = standStillTime;
+    }
+
+    public void fixNullLists() {
+        if(heads == null) {
+            heads = new ArrayList<>();
+        }
+        if(items == null) {
+            items = new ArrayList<>();
+        }
+        if(rareItems == null) {
+            rareItems = new ArrayList<>();
+        }
+        if(rareHeads == null) {
+            rareHeads = new ArrayList<>();
+        }
+
     }
 }

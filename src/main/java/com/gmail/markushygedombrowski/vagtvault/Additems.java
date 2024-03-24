@@ -3,19 +3,23 @@ package com.gmail.markushygedombrowski.vagtvault;
 import com.gmail.markushygedombrowski.HLVagtVault;
 import com.gmail.markushygedombrowski.config.VagtVault;
 import com.gmail.markushygedombrowski.config.VagtVaultLoader;
+import com.gmail.markushygedombrowski.items.RareItems;
 import me.arcaniax.hdb.api.HeadDatabaseAPI;
 import org.bukkit.Bukkit;
+import org.bukkit.DyeColor;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.material.Wool;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class Additems implements Listener {
@@ -23,39 +27,35 @@ public class Additems implements Listener {
     private final int ADDHEAD_INDEX = 7;
     private final int ADDRAREITEMS_INDEX = 3;
     private final int ADDRAREHEADS_INDEX = 5;
+    private final int BACK_INDEX = 4;
     private VagtVaultLoader vagtVaultLoader;
     private HeadDatabaseAPI api = new HeadDatabaseAPI();
     private HLVagtVault plugin;
+    private HashMap<Player, RareItems> rareItemsHashMap = new HashMap<>();
+    private HashMap<Player,Inventory> inventoryHashMap = new HashMap<>();
 
     public Additems(VagtVaultLoader vagtVaultLoader, HLVagtVault plugin) {
         this.vagtVaultLoader = vagtVaultLoader;
         this.plugin = plugin;
     }
 
-    public void create(Player player, VagtVault vagtVault) {
+    public void create(Player player, VagtVault vagtVault, Inventory backInv) {
         Inventory inv = Bukkit.createInventory(player, 9, "§aAdd Items: " + vagtVault.getName());
-        ItemStack addItems = api.getItemHead("54200");
-        ItemStack addHeads = api.getItemHead("38139");
-        ItemStack addRareItems = api.getItemHead("50099");
-        ItemStack addRareHeads = api.getItemHead("7888");
-        ItemMeta addItemsMeta = addItems.getItemMeta();
-        ItemMeta addHeadsMeta = addHeads.getItemMeta();
-        ItemMeta addRareItemsMeta = addRareItems.getItemMeta();
-        ItemMeta addRareHeadsMeta = addRareHeads.getItemMeta();
-        addItemsMeta.setDisplayName("§aTilføj Items");
-        addHeadsMeta.setDisplayName("§aTilføj §eHeads");
-        addRareItemsMeta.setDisplayName("§aTilføj §9Rare Items");
-        addRareHeadsMeta.setDisplayName("§aTilføj §6Rare Heads");
-        addItems.setItemMeta(addItemsMeta);
-        addHeads.setItemMeta(addHeadsMeta);
-        addRareItems.setItemMeta(addRareItemsMeta);
-        addRareHeads.setItemMeta(addRareHeadsMeta);
-        inv.setItem(ADDITEMS_INDEX, addItems);
-        inv.setItem(ADDHEAD_INDEX, addHeads);
-        inv.setItem(ADDRAREITEMS_INDEX, addRareItems);
-        inv.setItem(ADDRAREHEADS_INDEX, addRareHeads);
+        inventoryHashMap.put(player, backInv);
+        inv.setItem(BACK_INDEX, createItem("9866", "§cTilbage"));
+        inv.setItem(ADDITEMS_INDEX, createItem("54200", "§aTilføj Items"));
+        inv.setItem(ADDHEAD_INDEX, createItem("38139", "§aTilføj §eHeads"));
+        inv.setItem(ADDRAREITEMS_INDEX, createItem("50099", "§aTilføj §9Rare Items"));
+        inv.setItem(ADDRAREHEADS_INDEX, createItem("7888", "§aTilføj §6Rare Heads"));
         player.openInventory(inv);
+    }
 
+    private ItemStack createItem(String headId, String displayName) {
+        ItemStack item = api.getItemHead(headId);
+        ItemMeta meta = item.getItemMeta();
+        meta.setDisplayName(displayName);
+        item.setItemMeta(meta);
+        return item;
     }
 
     @EventHandler
@@ -64,49 +64,27 @@ public class Additems implements Listener {
         Inventory inv = event.getInventory();
         int slot = event.getRawSlot();
         ItemStack item = event.getCurrentItem();
-        if (item == null) {
+        if (item == null || !inv.getTitle().contains("§aAdd Items: ")) {
             return;
         }
-        if (inv.getTitle().contains("§aAdd Items: ")) {
-            event.setCancelled(true);
-            event.setResult(InventoryClickEvent.Result.DENY);
-            VagtVault vagtVault = vagtVaultLoader.getVagtVault(inv.getName().replace("§aAdd Items: ", ""));
-            if (slot == ADDITEMS_INDEX) {
-                additems(player, vagtVault);
-                return;
-            }
-            if (slot == ADDHEAD_INDEX) {
-                addheads(player, vagtVault);
-                return;
-            }
-            if (slot == ADDRAREITEMS_INDEX) {
-                addrareitems(player, vagtVault);
-                return;
-            }
-            if (slot == ADDRAREHEADS_INDEX) {
-                addrareheads(player, vagtVault);
-                return;
-            }
+        event.setCancelled(true);
+        event.setResult(InventoryClickEvent.Result.DENY);
+        VagtVault vagtVault = vagtVaultLoader.getVagtVault(inv.getName().replace("§aAdd Items: ", ""));
+        if (slot == ADDITEMS_INDEX) {
+            openInventory(player, vagtVault, "§aAdd Normal Items: ");
+        } else if (slot == ADDHEAD_INDEX) {
+            openInventory(player, vagtVault, "§aAdd Heads: ");
+        } else if (slot == ADDRAREITEMS_INDEX) {
+            openInventory(player, vagtVault, "§aAdd Rare Items: ");
+        } else if (slot == ADDRAREHEADS_INDEX) {
+            openInventory(player, vagtVault, "§aAdd Rare Heads: ");
+        } else if (slot == BACK_INDEX) {
+            player.openInventory(inventoryHashMap.get(player));
         }
     }
 
-    public void additems(Player player, VagtVault vagtVault) {
-        Inventory inv = Bukkit.createInventory(player, 9, "§aAdd Normal Items: " + vagtVault.getName());
-        player.openInventory(inv);
-    }
-
-    public void addheads(Player player, VagtVault vagtVault) {
-        Inventory inv = Bukkit.createInventory(player, 9, "§aAdd Heads: " + vagtVault.getName());
-        player.openInventory(inv);
-    }
-
-    public void addrareitems(Player player, VagtVault vagtVault) {
-        Inventory inv = Bukkit.createInventory(player, 9, "§aAdd Rare Items: " + vagtVault.getName());
-        player.openInventory(inv);
-    }
-
-    public void addrareheads(Player player, VagtVault vagtVault) {
-        Inventory inv = Bukkit.createInventory(player, 9, "§aAdd Rare Heads: " + vagtVault.getName());
+    public void openInventory(Player player, VagtVault vagtVault, String title) {
+        Inventory inv = Bukkit.createInventory(player, 9, title + vagtVault.getName());
         player.openInventory(inv);
     }
 
@@ -145,53 +123,109 @@ public class Additems implements Listener {
         } else if (inv.getTitle().contains("§aAdd Rare Items: ")) {
             event.setCancelled(true);
             event.setResult(InventoryClickEvent.Result.DENY);
+            VagtVault vagtVault = vagtVaultLoader.getVagtVault(inv.getName().replace("§aAdd Rare Items: ", ""));
             clickedInv.remove(item);
             inv.addItem(item);
             player.sendMessage("§aDu har tilføjet et §9Rare Item");
-            player.sendMessage("§aSkriv en procent chance for at få det");
-            player.setMetadata("rareItem", new org.bukkit.metadata.FixedMetadataValue(plugin, item));
+            RareItems rareItems = new RareItems(0.001, item);
+            rareItemsHashMap.put(player, rareItems);
+            setChanceGUI(player, vagtVault);
 
 
         }
 
     }
-    @EventHandler
-    public void onChat(AsyncPlayerChatEvent event) {
-        Player player = event.getPlayer();
-        if (!player.hasMetadata("rareItem")) {
-            return;
-        }
-        event.setCancelled(true);
-        String message = event.getMessage();
-        if(!message.matches("[0-9]+")) {
-            player.sendMessage("§cDu skal skrive et tal");
-            return;
-        }
-        double chance = Double.parseDouble(message);
-        ItemStack item = (ItemStack) player.getMetadata("rareItem").get(0).value();
-        VagtVault vagtVault = vagtVaultLoader.getVagtVault(player.getOpenInventory().getTitle().replace("§aAdd Rare Items: ", ""));
 
-        player.removeMetadata("rareItem", plugin);
-        player.sendMessage("§aDu har tilføjet et §9Rare Item med en chance på " + chance + "%");
-        player.closeInventory();
+    public void setChanceGUI(Player player, VagtVault vagtVault) {
+        Inventory inv = Bukkit.createInventory(player, 9, "§aSet Chance: " + vagtVault.getName());
+        RareItems rareItems = rareItemsHashMap.get(player);
+        Wool wool = new Wool(DyeColor.GREEN);
+        Wool wool1 = new Wool(DyeColor.RED);
+        ItemStack setChance = wool.toItemStack(1);
+        ItemStack removeChance = wool1.toItemStack(1);
+        ItemStack confirm = new ItemStack(Material.EMERALD_BLOCK);
 
+        ItemMeta setChanceMeta = setChance.getItemMeta();
+        ItemMeta removeChanceMeta = removeChance.getItemMeta();
+        ItemMeta confirmMeta = confirm.getItemMeta();
+        setChanceMeta.setDisplayName("§add Chance 0.001%");
+        removeChanceMeta.setDisplayName("§cRemove Chance 0.001%");
+        confirmMeta.setDisplayName("§aConfirm");
+        List<String> lore = new ArrayList<>();
+        lore.add("§aChance: " + rareItems.getChance() + "%");
+        confirmMeta.setLore(lore);
+        setChance.setItemMeta(setChanceMeta);
+        removeChance.setItemMeta(removeChanceMeta);
+        confirm.setItemMeta(confirmMeta);
+        inv.setItem(2, setChance);
+        inv.setItem(4, confirm);
+        inv.setItem(6, removeChance);
+        player.openInventory(inv);
     }
+
 
     @EventHandler
     public void onInventoryClose(InventoryCloseEvent event) {
         Inventory inv = event.getInventory();
         Player player = (Player) event.getPlayer();
-        if (inv.getName().contains("§aAdd Heads: ")) {
+        if (inv.getTitle().contains("§aAdd Heads: ")) {
             if (closeHeads(inv, player)) return;
         }
-        if (inv.getName().contains("§aAdd Normal Items: ")) {
+        if (inv.getTitle().contains("§aAdd Normal Items: ")) {
             if (closeNormalItems(inv, player)) return;
         }
 
-        if (inv.getName().contains("§aAdd Rare Heads: ")) {
+        if (inv.getTitle().contains("§aAdd Rare Heads: ")) {
             closeRareHeads(inv, player);
         }
+        if (inv.getTitle().contains("§aAdd Rare Items: ")) {
+            back(player, vagtVaultLoader.getVagtVault(inv.getTitle().replace("§aAdd Rare Items: ", "")));
+        }
+        if (inv.getTitle().contains("§aSet Chance: ")) {
+            rareItemsHashMap.remove(player);
+        }
 
+    }
+
+    @EventHandler
+    public void setChanceGUIListener(InventoryClickEvent event) {
+        Player player = (Player) event.getWhoClicked();
+        Inventory inv = event.getInventory();
+        int slot = event.getRawSlot();
+        ItemStack item = event.getCurrentItem();
+        if (item == null) {
+            return;
+        }
+        if (inv.getTitle().contains("§aSet Chance: ")) {
+            event.setCancelled(true);
+            event.setResult(InventoryClickEvent.Result.DENY);
+            VagtVault vagtVault = vagtVaultLoader.getVagtVault(inv.getTitle().replace("§aSet Chance: ", ""));
+            RareItems rareItems = rareItemsHashMap.get(player);
+            double chance = rareItems.getChance();
+            if (slot == 2) {
+                rareItems.setChance(chance + 0.001);
+            } else if (slot == 6) {
+                rareItems.setChance(chance - 0.001);
+            } else if (slot == 4) {
+                List<RareItems> rareItemsList = new ArrayList<>();
+                rareItemsList.add(rareItems);
+                vagtVault.setRareItems(rareItemsList);
+                player.sendMessage("§aDu har tilføjet et §9Rare Item med en chance på " + chance + "%");
+                rareItemsHashMap.remove(player);
+                back(player, vagtVault);
+                return;
+            }
+            ItemStack confirm = inv.getItem(4);
+            ItemMeta meta = confirm.getItemMeta();
+            List<String> lore = new ArrayList<>();
+            lore.add("§aChance: " + rareItems.getChance() + "%");
+            meta.setLore(lore);
+            confirm.setItemMeta(meta);
+            inv.setItem(4, confirm);
+            player.updateInventory();
+
+
+        }
     }
 
     private boolean closeHeads(Inventory inv, Player player) {
@@ -257,6 +291,6 @@ public class Additems implements Listener {
     }
 
     private void back(Player player, VagtVault vagtVault) {
-        Bukkit.getScheduler().runTaskLater(plugin, () -> create(player, vagtVault), 1L);
+        Bukkit.getScheduler().runTaskLater(plugin, () -> create(player, vagtVault,inventoryHashMap.get(player)), 1L);
     }
 }

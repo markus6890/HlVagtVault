@@ -15,10 +15,10 @@ public class HLVagtVault extends JavaPlugin {
         VagtVaultManager vagtVaultManager = new VagtVaultManager();
         vagtVaultManager.setup();
         vagtVaultManager.saveVagtVault();
-        VagtVaultLoader vagtVaultLoader = new VagtVaultLoader(vagtVaultManager.getVagtVaultConfig());
+        VagtVaultLoader vagtVaultLoader = new VagtVaultLoader(vagtVaultManager.getVagtVaultConfig(), vagtVaultManager);
         Additems additems = new Additems(vagtVaultLoader, this);
         Bukkit.getPluginManager().registerEvents(additems, this);
-        Create create = new Create(additems, vagtVaultLoader);
+        Create create = new Create(additems, vagtVaultLoader, this);
         Bukkit.getPluginManager().registerEvents(create, this);
         VagtVaultCommands vagtVaultCommands = new VagtVaultCommands(create);
         getCommand("vagtvault").setExecutor(vagtVaultCommands);
