@@ -22,8 +22,8 @@ import org.bukkit.util.BlockIterator;
 public class Create implements Listener {
     private final int ADD_ITEM = 2;
     private final int SET_RESETTIME = 6;
-    private final int ANDRE = 10;
-    private final int CREATEVAGTVAULT = 13;
+    private final int ANDRE = 4;
+    private final int CREATEVAGTVAULT =22;
     private Additems additems;
     private VagtVaultLoader vagtVaultLoader;
     private HeadDatabaseAPI api = new HeadDatabaseAPI();
@@ -40,7 +40,7 @@ public class Create implements Listener {
     }
 
     public void create(Player player, String name) {
-        Inventory inv = Bukkit.createInventory(player, 18, "§eVagtVault: " + name);
+        Inventory inv = Bukkit.createInventory(player, 27, "§eVagtVault: " + name);
         ItemStack addItem = api.getItemHead("1709");
         ItemStack setResetTime = api.getItemHead("2394");
         ItemStack createVagtVault = api.getItemHead("21771");

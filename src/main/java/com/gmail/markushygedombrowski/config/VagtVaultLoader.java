@@ -1,6 +1,7 @@
 package com.gmail.markushygedombrowski.config;
 
 import com.gmail.markushygedombrowski.items.RareItems;
+import com.gmail.markushygedombrowski.items.WrapperItemstack;
 import me.arcaniax.hdb.api.HeadDatabaseAPI;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -17,6 +18,7 @@ public class VagtVaultLoader {
     private FileConfiguration config;
     private VagtVaultManager vagtVaultManager;
 
+
     public VagtVaultLoader(FileConfiguration config, VagtVaultManager vagtVaultManager) {
         this.config = config;
         this.vagtVaultManager = vagtVaultManager;
@@ -24,27 +26,36 @@ public class VagtVaultLoader {
 
     public void load() {
         FileConfiguration config = vagtVaultManager.getVagtVaultConfig();
+        vagtVaults.clear();
+        locations.clear();
         for (String key : config.getConfigurationSection("vagtVaults").getKeys(false)) {
             String name = config.getString("vagtVaults." + key + ".name");
             Location location = (Location) config.get("vagtVaults." + key + ".location");
             int resetTime = config.getInt("vagtVaults." + key + ".resetTime");
             int failresetTime = config.getInt("vagtVaults." + key + ".failresetTime");
             int standStillTime = config.getInt("vagtVaults." + key + ".standStillTime");
-            List<ItemStack> items = ((List<ItemStack>) config.get("vagtVaults." + key + ".items"));
+            List<ItemStack> items = convertWrapperItemstack(((List<WrapperItemstack>) config.get("vagtVaults." + key + ".items")));
             List<ItemStack> heads = ((List<ItemStack>) config.get("vagtVaults." + key + ".heads"));
             List<RareItems> rareItems = ((List<RareItems>) config.get("vagtVaults." + key + ".rareItems"));
             List<ItemStack> rareHeads = ((List<ItemStack>) config.get("vagtVaults." + key + ".rareHeads"));
-            double headChance = config.getInt("vagtVaults." + key + ".headChance");
-            double rareHeadChance = config.getInt("vagtVaults." + key + ".rareHeadChance");
+            double headChance = config.getDouble("vagtVaults." + key + ".headChance");
+            double rareHeadChance = config.getDouble("vagtVaults." + key + ".rareHeadChance");
             String boardcastMessage = config.getString("vagtVaults." + key + ".boardcastMessage");
             String playerMessage = config.getString("vagtVaults." + key + ".playerMessage");
             boolean sendBoardcast = config.getBoolean("vagtVaults." + key + ".sendBoardcast");
+            String cooldownMessage = config.getString("vagtVaults." + key + ".cooldownMessage");
+            String finishBoardcastMessage = config.getString("vagtVaults." + key + ".finishBoardcastMessage");
+            String finishPlayerMessage = config.getString("vagtVaults." + key + ".finishPlayerMessage");
+            boolean needItem = config.getBoolean("vagtVaults." + key + ".needItem");
+            ItemStack item = config.getItemStack("vagtVaults." + key + ".item");
+            int minVagtOnline = config.getInt("vagtVaults." + key + ".minVagtOnline");
 
-            VagtVault vagtVault = new VagtVault(name, location, resetTime, failresetTime, standStillTime, items, heads, rareItems, rareHeads, headChance, rareHeadChance, boardcastMessage, playerMessage, sendBoardcast);
+
+            VagtVault vagtVault = new VagtVault(name, location, resetTime, failresetTime, standStillTime,
+                    items, heads, rareItems, rareHeads, headChance, rareHeadChance, boardcastMessage, playerMessage,
+                    sendBoardcast, cooldownMessage, finishBoardcastMessage, finishPlayerMessage, needItem, item, minVagtOnline);
             vagtVaults.put(key, vagtVault);
             locations.add(location);
-
-
         }
     }
 
@@ -54,7 +65,7 @@ public class VagtVaultLoader {
         config.set("vagtVaults." + vagtVault.getName() + ".resetTime", vagtVault.getResetTime());
         config.set("vagtVaults." + vagtVault.getName() + ".failresetTime", vagtVault.getFailresetTime());
         config.set("vagtVaults." + vagtVault.getName() + ".standStillTime", vagtVault.getStandStillTime());
-        config.set("vagtVaults." + vagtVault.getName() + ".items", vagtVault.getItems());
+        config.set("vagtVaults." + vagtVault.getName() + ".items", convertItemStack(vagtVault.getItems()));
         config.set("vagtVaults." + vagtVault.getName() + ".heads", vagtVault.getHeads());
         config.set("vagtVaults." + vagtVault.getName() + ".rareItems", vagtVault.getRareItems());
         config.set("vagtVaults." + vagtVault.getName() + ".rareHeads", vagtVault.getRareHeads());
@@ -63,9 +74,33 @@ public class VagtVaultLoader {
         config.set("vagtVaults." + vagtVault.getName() + ".boardcastMessage", vagtVault.getBoardcastMessage());
         config.set("vagtVaults." + vagtVault.getName() + ".playerMessage", vagtVault.getPlayerMessage());
         config.set("vagtVaults." + vagtVault.getName() + ".sendBoardcast", vagtVault.isSendBoardcast());
+        config.set("vagtVaults." + vagtVault.getName() + ".cooldownMessage", vagtVault.getCooldownMessage());
+        config.set("vagtVaults." + vagtVault.getName() + ".finishBoardcastMessage", vagtVault.getFinishBoardcastMessage());
+        config.set("vagtVaults." + vagtVault.getName() + ".finishPlayerMessage", vagtVault.getFinishPlayerMessage());
+        config.set("vagtVaults." + vagtVault.getName() + ".needItem", vagtVault.isNeedItem());
+        config.set("vagtVaults." + vagtVault.getName() + ".item", vagtVault.getRobberyItem());
+        config.set("vagtVaults." + vagtVault.getName() + ".minVagtOnline", vagtVault.getMinAmountOfVagt());
         vagtVaults.put(vagtVault.getName(), vagtVault);
         locations.add(vagtVault.getLocation());
         vagtVaultManager.saveVagtVault();
+    }
+    public void reloadVagtVault() {
+        load();
+    }
+    public List<WrapperItemstack> convertItemStack(List<ItemStack> items) {
+        List<WrapperItemstack> wrapperItemstacks = new ArrayList<>();
+        for (ItemStack item : items) {
+            wrapperItemstacks.add(new WrapperItemstack(item));
+        }
+        return wrapperItemstacks;
+    }
+
+    public List<ItemStack> convertWrapperItemstack(List<WrapperItemstack> wrapperItemstacks) {
+        List<ItemStack> items = new ArrayList<>();
+        for (WrapperItemstack wrapperItemstack : wrapperItemstacks) {
+            items.add(wrapperItemstack.getItem());
+        }
+        return items;
     }
 
     public VagtVault getVagtVault(String name) {
@@ -80,12 +115,18 @@ public class VagtVaultLoader {
         }
         return null;
     }
+    public void saveall() {
+        for (VagtVault vagtVault : vagtVaults.values()) {
+            save(vagtVault);
+        }
+    }
 
 
     public void removeVagtVault(String name) {
         VagtVault vagtVault = vagtVaults.get(name);
         config.set("vagtVaults." + vagtVault.getName(), null);
         vagtVaults.remove(name);
+        locations.remove(vagtVault.getLocation());
     }
     public HashMap<String, VagtVault> getVagtVaults() {
         return vagtVaults;
@@ -101,4 +142,6 @@ public class VagtVaultLoader {
         item.setItemMeta(meta);
         return item;
     }
+
+
 }

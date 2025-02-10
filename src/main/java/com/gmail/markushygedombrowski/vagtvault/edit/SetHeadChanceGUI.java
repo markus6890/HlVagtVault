@@ -7,12 +7,11 @@ import com.gmail.markushygedombrowski.items.RareItems;
 import org.bukkit.Bukkit;
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
-import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -22,21 +21,21 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class EditRareItem implements Listener {
+public class SetHeadChanceGUI implements Listener {
+    private HashMap<Player, Inventory> inventoryHashMap = new HashMap<>();
+    private HashMap<Player, String> headTypeHashMap = new HashMap<>();
+    private HashMap<Player, VagtVault> vagtVaultHashMap = new HashMap<>();
 
     private VagtVaultLoader vagtVaultLoader;
     private HLVagtVault plugin;
-    private HashMap<Player, RareItems> rareItemsHashMap = new HashMap<>();
-    private HashMap<Player, Inventory> inventoryHashMap = new HashMap<>();
 
-    public EditRareItem(VagtVaultLoader vagtVaultLoader, HLVagtVault plugin) {
+    public SetHeadChanceGUI(VagtVaultLoader vagtVaultLoader, HLVagtVault plugin) {
         this.vagtVaultLoader = vagtVaultLoader;
         this.plugin = plugin;
     }
 
-    public void setChanceGUI(Player player, VagtVault vagtVault, RareItems rareItems, Inventory backInv) {
-        Inventory inv = Bukkit.createInventory(player, 9, "§aSet Rare Item Chance: " + vagtVault.getName());
-
+    public void setChanceGUI(Player player, VagtVault vagtVault, Inventory backInv, String headType) {
+        Inventory inv = Bukkit.createInventory(player, 9, "§aSet " + headType + " Head Chance: " + vagtVault.getName());
         Wool wool = new Wool(DyeColor.GREEN);
         Wool wool1 = new Wool(DyeColor.RED);
         ItemStack setChance = wool.toItemStack(1);
@@ -50,13 +49,20 @@ public class EditRareItem implements Listener {
         ItemMeta removeChanceMeta = removeChance.getItemMeta();
         ItemMeta removeChanceMeta1 = removeChance1.getItemMeta();
         ItemMeta confirmMeta = confirm.getItemMeta();
-        setChanceMeta.setDisplayName("§aAdd Chance 0.001%");
-        addChanceMeta.setDisplayName("§aAdd Chance 1%");
-        removeChanceMeta.setDisplayName("§cRemove Chance 0.001%");
-        removeChanceMeta1.setDisplayName("§cRemove Chance 1%");
+        setChanceMeta.setDisplayName("§aAdd Chance 0.01%");
+        addChanceMeta.setDisplayName("§aAdd Chance 0.1%");
+        removeChanceMeta.setDisplayName("§cRemove Chance 0.01%");
+        removeChanceMeta1.setDisplayName("§cRemove Chance 0.1%");
         confirmMeta.setDisplayName("§aConfirm");
+
+        double chance;
+        if (headType.equalsIgnoreCase("Rare")) {
+            chance = vagtVault.getRareHeadChance();
+        } else {
+            chance = vagtVault.getHeadChance();
+        }
         List<String> lore = new ArrayList<>();
-        lore.add("§aChance: " + rareItems.getChance() + "%");
+        lore.add("§aChance: " + chance + "%");
         confirmMeta.setLore(lore);
         setChance.setItemMeta(setChanceMeta);
         addChance1.setItemMeta(addChanceMeta);
@@ -69,7 +75,8 @@ public class EditRareItem implements Listener {
         inv.setItem(6, removeChance);
         inv.setItem(7, removeChance1);
         inventoryHashMap.put(player, backInv);
-        rareItemsHashMap.put(player, rareItems);
+        headTypeHashMap.put(player, headType);
+        vagtVaultHashMap.put(player, vagtVault);
         player.openInventory(inv);
     }
 
@@ -82,35 +89,50 @@ public class EditRareItem implements Listener {
         if (item == null) {
             return;
         }
-        if (inv.getTitle().contains("§aSet Rare Item Chance: ")) {
+        if (inv.getTitle().contains(" Head Chance: ")) {
             event.setCancelled(true);
             event.setResult(InventoryClickEvent.Result.DENY);
-            VagtVault vagtVault = vagtVaultLoader.getVagtVault(inv.getTitle().replace("§aSet Rare Item Chance: ", ""));
-            RareItems rareItems = rareItemsHashMap.get(player);
-            double chance = rareItems.getChance();
+            VagtVault vagtVault = vagtVaultHashMap.get(player);
+            String headType = headTypeHashMap.get(player);
+            double chance;
+            double chancechange = 0;
+            if (headType.equalsIgnoreCase("Rare")) {
+                chance = vagtVault.getRareHeadChance();
+            } else {
+                chance = vagtVault.getHeadChance();
+            }
+
             if (slot == 1) {
-                rareItems.setChance(chance + 1);
+                setChance(vagtVault, headType, chance + 0.1);
             } else if (slot == 2) {
-                rareItems.setChance(chance + 0.001);
+                setChance(vagtVault, headType, chance + 0.01);
             } else if (slot == 6) {
-                rareItems.setChance(chance - 0.001);
-            } else if (slot == 4) {
-                vagtVault.addRareItem(rareItems);
-                player.sendMessage("§aDu har tilføjet et §9Rare Item med en chance på " + chance + "%");
-                rareItemsHashMap.remove(player);
-                back(player);
-                vagtVaultLoader.save(vagtVault);
-                return;
-            } else if (slot == 7) {
-                if(chance - 1 < 0) {
+                if (chance - 0.01 < 0) {
                     return;
                 }
-                rareItems.setChance(chance - 1);
+                setChance(vagtVault, headType, chance - 0.01);
+            } else if (slot == 7) {
+                if (chance - 0.1 < 0) {
+                    return;
+                }
+                setChance(vagtVault, headType, chance - 0.1);
+            }
+            if (slot == 4) {
+                player.sendMessage("§aDu har ændret på §6" + headType + " Head chance til " + chance + "%");
+                headTypeHashMap.remove(player);
+                vagtVaultLoader.save(vagtVault);
+                vagtVaultHashMap.remove(player);
+                back(player);
+                return;
             }
             ItemStack confirm = inv.getItem(4);
             ItemMeta meta = confirm.getItemMeta();
             List<String> lore = new ArrayList<>();
-            lore.add("§aChance: " + rareItems.getChance() + "%");
+            if (headType.equalsIgnoreCase("Rare")) {
+                lore.add("§aChance: " + vagtVault.getRareHeadChance() + "%");
+            } else {
+                lore.add("§aChance: " + vagtVault.getHeadChance() + "%");
+            }
             meta.setLore(lore);
             confirm.setItemMeta(meta);
             inv.setItem(4, confirm);
@@ -120,7 +142,14 @@ public class EditRareItem implements Listener {
         }
     }
 
-
+    private void setChance(VagtVault vagtVault, String headType, double chance) {
+        double roundOff = Math.round(chance * 100.0) / 100.0;
+        if(headType.equalsIgnoreCase("Rare")) {
+            vagtVault.setRareHeadChance(roundOff);
+        } else {
+            vagtVault.setHeadChance(roundOff);
+        }
+    }
     private void back(Player player) {
         Bukkit.getScheduler().runTaskLater(plugin, () -> player.openInventory(inventoryHashMap.get(player)), 1L);
     }

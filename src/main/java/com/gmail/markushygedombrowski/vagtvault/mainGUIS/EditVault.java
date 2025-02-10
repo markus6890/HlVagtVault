@@ -3,15 +3,11 @@ package com.gmail.markushygedombrowski.vagtvault.mainGUIS;
 import com.gmail.markushygedombrowski.config.VagtVault;
 import com.gmail.markushygedombrowski.config.VagtVaultLoader;
 import com.gmail.markushygedombrowski.items.RareItems;
-import com.gmail.markushygedombrowski.vagtvault.edit.Additems;
-import com.gmail.markushygedombrowski.vagtvault.edit.EditRareItem;
-import com.gmail.markushygedombrowski.vagtvault.edit.OtherSettings;
-import com.gmail.markushygedombrowski.vagtvault.edit.SetTimes;
+import com.gmail.markushygedombrowski.vagtvault.edit.*;
 import me.arcaniax.hdb.api.HeadDatabaseAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -24,22 +20,25 @@ import java.util.Collections;
 import java.util.List;
 
 public class EditVault implements Listener {
-    private final int ITEM_INDEX = 11;
-    private final int TIMES_INDEX = 15;
-    private final int QUCIK_INFO_INDEX = 13;
+    private final int ITEM_INDEX = 2;
+    private final int TIMES_INDEX = 6;
+    private final int QUCIK_INFO_INDEX = 4;
     private final int CLOSE_INDEX = 22;
+    private final int SET_ITEM_INDEX = 12;
     private final HeadDatabaseAPI api = new HeadDatabaseAPI();
     private VagtVaultLoader vagtVaultLoader;
     private Additems additems;
     private SetTimes setTimes;
     private OtherSettings otherSettings;
     private EditRareItem editRareItem;
-    public EditVault(VagtVaultLoader vagtVaultLoader, Additems additems, SetTimes setTimes, OtherSettings otherSettings, EditRareItem editRareItem) {
+    private NeedItemToRob needItemToRob;
+    public EditVault(VagtVaultLoader vagtVaultLoader, Additems additems, SetTimes setTimes, OtherSettings otherSettings, EditRareItem editRareItem, NeedItemToRob needItemToRob) {
         this.vagtVaultLoader = vagtVaultLoader;
         this.additems = additems;
         this.setTimes = setTimes;
         this.otherSettings = otherSettings;
         this.editRareItem = editRareItem;
+        this.needItemToRob = needItemToRob;
     }
 
     public void create(Player player, VagtVault vagtVault) {
@@ -48,6 +47,7 @@ public class EditVault implements Listener {
         ItemStack times = createItem("2394", "§aTider");
         ItemStack quickInfo = createItem("38869", "§aQuick Info/Andre Indstillinger");
         ItemStack close = createItem("9357", "§cClose");
+        ItemStack Itemneeded = new ItemStack(vagtVault.getRobberyItem().getType());
 
         ItemMeta quickInfoMeta = getQuickMeta(vagtVault, quickInfo);
         quickInfo.setItemMeta(quickInfoMeta);
@@ -60,6 +60,7 @@ public class EditVault implements Listener {
         inv.setItem(TIMES_INDEX, times);
         inv.setItem(QUCIK_INFO_INDEX, quickInfo);
         inv.setItem(CLOSE_INDEX, close);
+        inv.setItem(SET_ITEM_INDEX, Itemneeded);
         player.openInventory(inv);
 
     }
@@ -88,6 +89,8 @@ public class EditVault implements Listener {
                 player.closeInventory();
             } else if(slot == QUCIK_INFO_INDEX) {
                 otherSettings.create(player,vagtVault,inv);
+            } else if(slot == SET_ITEM_INDEX) {
+                needItemToRob.create(player,vagtVault,inv);
             }
 
         } else if (inv.getTitle().contains("§aEdit Items and §6Heads: ")) {
@@ -133,32 +136,44 @@ public class EditVault implements Listener {
             additems.create(player, vagtVault, inv);
         } else {
             if (item.getItemMeta().getLore().contains("§7Klik for at §cFjerne")) {
-                removeItem(title, inv, vagtVault, item, player);
+
+                item.getItemMeta().setLore(null);
+
+                removeItem(title, inv, vagtVault, item, player,slot);
             } else if (item.getItemMeta().getLore().contains("§bVenstre §7Klik for at §aRedigere")) {
-                RareItems rareItems = vagtVault.getRareItem(item);
+                RareItems rareItems = vagtVault.getRareItems().get(slot);
                 if(event.isLeftClick()) {
                     editRareItem.setChanceGUI(player,vagtVault,rareItems,inv);
                 } else if(event.isRightClick()) {
-                    vagtVault.removeRareItem(rareItems);
+                    player.sendMessage("§7Du har fjernet et Rare Item");
+                    vagtVault.getRareItems().remove(rareItems);
                     vagtVaultLoader.save(vagtVault);
+                    showItemsInVagtVault(player, vagtVault, "Rare Items");
                 }
 
             }
         }
     }
 
-    private void removeItem(String title, Inventory inv, VagtVault vagtVault, ItemStack item, Player player) {
-        String type = title.substring(title.indexOf("Edit §7") + 6, title.indexOf(":"));
-        if (inv.getTitle().contains("Rare Heads")) {
-            vagtVault.getRareHeads().remove(item);
-        } else if (inv.getTitle().contains("Items")) {
-            vagtVault.getItems().remove(item);
-        } else if (inv.getTitle().contains("Heads")) {
-            vagtVault.getHeads().remove(item);
+    private void removeItem(String title, Inventory inv, VagtVault vagtVault, ItemStack item, Player player,int slot) {
+        String type = title.substring(title.indexOf("Edit §7") + 5, title.indexOf(":"));
+
+        if (inv.getTitle().contains("Rare Heads") && vagtVault.getRareHeads().get(slot) != null) {
+            vagtVault.getRareHeads().remove(vagtVault.getRareHeads().get(slot));
+            player.sendMessage("§7Du har fjernet et Rare Head");
+        } else if (inv.getTitle().contains("Items") && vagtVault.getItems().get(slot) != null) {
+            vagtVault.getItems().remove(vagtVault.getItems().get(slot));
+            player.sendMessage("§7Du har fjernet et Item");
+        } else if (inv.getTitle().contains("Heads") && vagtVault.getHeads().get(slot) != null) {
+            vagtVault.getHeads().remove(vagtVault.getHeads().get(slot));
+            player.sendMessage("§7Du har fjernet et Head");
+        } else {
+            player.sendMessage("§cItem not found");
         }
         vagtVaultLoader.save(vagtVault);
         showItemsInVagtVault(player, vagtVault, type);
     }
+
 
 
     public void items(Player player, VagtVault vagtVault) {
@@ -179,35 +194,38 @@ public class EditVault implements Listener {
         add.getItemMeta().setLore(Collections.singletonList("§7Klik for at §aTilføje"));
         inv.setItem(53, add);
 
-        List<ItemStack> items = new ArrayList<>();
+        List<ItemStack> items = null;
         if (type.contains("Rare Items")) {
             setRareItemsInInv(p, vagtVault, inv);
             return;
         } else if (type.contains("Items")) {
-            items = vagtVault.getItems();
+            items = new ArrayList<>(vagtVault.getItems());
         } else if (type.contains("Rare Heads")) {
-            items = vagtVault.getRareHeads();
+            items = new ArrayList<>(vagtVault.getRareHeads());
         } else if (type.contains("Heads")) {
-            items = vagtVault.getHeads();
+            items = new ArrayList<>(vagtVault.getHeads());
         }
+        assert items != null;
         setItemsInInv(items, inv);
         p.openInventory(inv);
     }
 
     private void setItemsInInv(List<ItemStack> items, Inventory inv) {
-        items.forEach(i -> {
-            ItemMeta meta = i.getItemMeta();
+        new ArrayList<>(items).forEach(i -> {
+            ItemStack itemCopy = i.clone(); // Create a copy of the item
+            ItemMeta meta = itemCopy.getItemMeta();
             List<String> lore = new ArrayList<>();
             lore.add("§7Klik for at §cFjerne");
             meta.setLore(lore);
-            i.setItemMeta(meta);
-            inv.addItem(i);
+            itemCopy.setItemMeta(meta);
+            inv.addItem(itemCopy);
         });
     }
 
     private void setRareItemsInInv(Player p, VagtVault vagtVault, Inventory inv) {
-        vagtVault.getRareItems().forEach(i -> {
-            ItemStack item = i.getItem();
+
+        new ArrayList<>(vagtVault.getRareItems()).forEach(i -> {
+            ItemStack item = i.getItem().clone();
             ItemMeta meta = item.getItemMeta();
             List<String> lore = new ArrayList<>();
             lore.add("§cChance: " + i.getChance() + "%");

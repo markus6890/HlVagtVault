@@ -3,15 +3,13 @@ package com.gmail.markushygedombrowski.config;
 import com.gmail.markushygedombrowski.items.RareItems;
 import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import java.sql.Time;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Timer;
 
 public class VagtVault {
     private String name;
@@ -30,10 +28,23 @@ public class VagtVault {
     private String playerMessage;
     private boolean isCooldown = false;
     private boolean sendBoardcast;
+    private String cooldownMessage;
+    private String finishBoardcastMessage;
+    private boolean needItem;
+    private ItemStack RobberyItem;
+
+
+    private int minAmountOfVagt;
+
+    private String finishPlayerMessage;
 
 
 
-    public VagtVault(String name, Location location, int resetTime, int failresetTime, int standStillTime, List<ItemStack> items, List<ItemStack> heads, List<RareItems> rareItems, List<ItemStack> rareHeads, double headChance, double rareHeadChance, String boardcastMessage, String playerMessage, boolean sendBoardcast) {
+
+    public VagtVault(String name, Location location, int resetTime, int failresetTime, int standStillTime,
+                     List<ItemStack> items, List<ItemStack> heads, List<RareItems> rareItems, List<ItemStack> rareHeads,
+                     double headChance, double rareHeadChance, String boardcastMessage, String playerMessage, boolean sendBoardcast,
+                     String cooldownMessage, String finishBoardcastMessage, String finishPlayerMessage, boolean needItem, ItemStack item, int minAmountOfVagt) {
         this.name = name;
         this.location = location;
         this.resetTime = resetTime;
@@ -48,6 +59,12 @@ public class VagtVault {
         this.boardcastMessage = boardcastMessage;
         this.playerMessage = playerMessage;
         this.sendBoardcast = sendBoardcast;
+        this.cooldownMessage = cooldownMessage;
+        this.finishBoardcastMessage = finishBoardcastMessage;
+        this.finishPlayerMessage = finishPlayerMessage;
+        this.needItem = needItem;
+        this.RobberyItem = item;
+        this.minAmountOfVagt = minAmountOfVagt;
     }
     public VagtVault(String name,Location location,int resetTime,int failresetTime,int standStillTime){
         this.name = name;
@@ -55,10 +72,53 @@ public class VagtVault {
         this.resetTime = resetTime;
         this.failresetTime = failresetTime;
         this.standStillTime = standStillTime;
-        this.boardcastMessage = "§4%player% §7er igang med at §4røve §6%vagtvault_name%";
-        this.playerMessage = "§7Du er igang med at §4røve §6%vagtvault_name% du skal stå stille i §4%vagtvault_standstill% §7sekunder";
+        this.boardcastMessage = "§7[§9§lVagt Vault§7] §4§l%player_name% §7er i gang med at §4§lrøve §6%vagtvault_name%";
+        this.playerMessage = "§7[§9§lVagt Vault§7] §7Du er igang med at §4§lrøve §6§l%vagtvault_name% §7du skal stå stille i §4%vagtvault_standstill% §7sekunder";
+        this.finishBoardcastMessage = "§7[§9§lVagt Vault§7] §4§l%player_name% §7har gennemført røveriet af §4§l%vagtvault_name%";
+        this.finishPlayerMessage = "§7[§9§lVagt Vault§7] §aDu har gennemført røveriet af §4§l%vagtvault_name%";
+        this.cooldownMessage = "§7[§9§lVagt Vault§7] §cDu har allerede røvet denne vagt vault!";
         this.sendBoardcast = true;
+        this.needItem = true;
+        this.RobberyItem = new ItemStack(Material.DIAMOND_SWORD);
+        this.minAmountOfVagt = 1;
 
+    }
+    public int getMinAmountOfVagt() {
+        return minAmountOfVagt;
+    }
+
+    public void setMinAmountOfVagt(int minAmountOfVagt) {
+        this.minAmountOfVagt = minAmountOfVagt;
+    }
+    public boolean isNeedItem() {
+        return needItem;
+    }
+
+    public void setNeedItem(boolean needItem) {
+        this.needItem = needItem;
+    }
+
+    public ItemStack getRobberyItem() {
+        return RobberyItem;
+    }
+
+    public void setRobberyItem(ItemStack robberyItem) {
+        this.RobberyItem = robberyItem;
+    }
+
+    public void setCooldownMessage(String cooldownMessage) {
+        this.cooldownMessage = cooldownMessage;
+    }
+
+
+    public void setFinishBoardcastMessage(String finishBoardcastMessage) {
+        this.finishBoardcastMessage = finishBoardcastMessage;
+    }
+
+
+
+    public void setFinishPlayerMessage(String finishPlayerMessage) {
+        this.finishPlayerMessage = finishPlayerMessage;
     }
     public String getName() {
         return name;
@@ -188,7 +248,7 @@ public class VagtVault {
         return headChance;
     }
 
-    public void setHeadChance(int headChance) {
+    public void setHeadChance(double headChance) {
         this.headChance = headChance;
     }
 
@@ -196,7 +256,7 @@ public class VagtVault {
         return rareHeadChance;
     }
 
-    public void setRareHeadChance(int rareHeadChance) {
+    public void setRareHeadChance(double rareHeadChance) {
         this.rareHeadChance = rareHeadChance;
     }
 
@@ -247,15 +307,35 @@ public class VagtVault {
         this.boardcastMessage = boardcastMessage;
     }
 
-    public String getPlayerMessage() {
-        return playerMessage;
-    }
+
 
     public String getPlayerMessage(Player player){
 
         return PlaceholderAPI.setPlaceholders(player,formatMessage(playerMessage));
     }
 
+    public String getFinishPlayerMessage(Player player) {
+        return PlaceholderAPI.setPlaceholders(player,formatMessage(finishPlayerMessage));
+    }
+
+    public String getFinishBoardcastMessage(Player player) {
+        return PlaceholderAPI.setPlaceholders(player,formatMessage(finishBoardcastMessage));
+    }
+    public String getCooldownMessage(Player player) {
+        return PlaceholderAPI.setPlaceholders(player,formatMessage(cooldownMessage));
+    }
+    public String getCooldownMessage() {
+        return cooldownMessage;
+    }
+    public String getFinishPlayerMessage() {
+        return finishPlayerMessage;
+    }
+    public String getFinishBoardcastMessage() {
+        return finishBoardcastMessage;
+    }
+    public String getPlayerMessage() {
+        return playerMessage;
+    }
     public void setPlayerMessage(String playerMessage) {
         this.playerMessage = playerMessage;
     }
@@ -297,7 +377,13 @@ public class VagtVault {
         }
 
         return message;
+    }
 
+    public void sendMessages(Player player){
+        player.sendMessage(getPlayerMessage(player));
+        if(sendBoardcast){
+            player.getServer().broadcastMessage(getBoardcastMessage(player));
+        }
     }
 
 

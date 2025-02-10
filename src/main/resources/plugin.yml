@@ -2,7 +2,7 @@ main: com.gmail.markushygedombrowski.HLVagtVault
 name: HLVagtVault
 version: 1.0
 author: Markus Hyge Dombrowski
-depend: [Vault,PlaceholderAPI]
+depend: [Vault,PlaceholderAPI,HLUtils,Combat]
 commands:
   vagtvault:
     aliases: ["vv"]

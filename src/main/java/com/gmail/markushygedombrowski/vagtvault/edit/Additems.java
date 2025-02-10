@@ -34,7 +34,6 @@ public class Additems implements Listener {
     private EditRareItem editRareItem;
     private HashMap<Player, RareItems> rareItemsHashMap = new HashMap<>();
     private HashMap<Player, Inventory> inventoryHashMap = new HashMap<>();
-    private static final String ADD_ITEMS_TITLE = "§aAdd Items: ";
     private static final String ADD_NORMAL_ITEMS_TITLE = "§aAdd Normal Items: ";
     private static final String ADD_HEADS_TITLE = "§aAdd Heads: ";
     private static final String ADD_RARE_ITEMS_TITLE = "§aAdd Rare Items: ";
@@ -102,67 +101,54 @@ public class Additems implements Listener {
         player.openInventory(inv);
     }
 
+
     @EventHandler
     public void onInventoryClickAddItems(InventoryClickEvent event) {
         Player player = (Player) event.getWhoClicked();
         Inventory inv = event.getView().getTopInventory();
         Inventory clickedInv = event.getClickedInventory();
-        int slot = event.getRawSlot();
         ItemStack item = event.getCurrentItem();
 
-        if (item == null) {
+        if (item == null) return;
+
+        if (inv.getTitle().contains("§aAdd Heads: ")) {
+            handleAddItems(event, player, inv, clickedInv, item, "heads");
+        } else if (inv.getTitle().contains("§aAdd Normal Items: ")) {
+            handleAddItems(event, player, inv, clickedInv, item, "items");
+        } else if (inv.getTitle().contains("§aAdd Rare Heads: ")) {
+            handleAddItems(event, player, inv, clickedInv, item, "Rare heads");
+        } else if (inv.getTitle().contains("§aAdd Rare Items: ")) {
+            handleAddItems(event, player, inv, clickedInv, item, "rareitems");
+        }
+    }
+
+    private void handleAddItems(InventoryClickEvent event, Player player, Inventory inv, Inventory clickedInv,ItemStack item, String type) {
+        event.setCancelled(true);
+        if((item.getType().toString().contains("SKULL") && !type.contains("heads")) || (!item.getType().toString().contains("SKULL") && type.contains("heads"))) {
+            player.sendMessage("§cDu kan kun tilføje " + type);
             return;
         }
-        if (inv.getTitle().contains("§aAdd Heads: ")) {
-            event.setCancelled(true);
-            event.setResult(InventoryClickEvent.Result.DENY);
-            if (!item.getType().toString().contains("SKULL")) {
-                player.sendMessage("§cDu kan kun tilføje heads");
-                return;
-            }
-            clickedInv.remove(item);
-            inv.addItem(item);
-            player.sendMessage("§aDu har tilføjet et §eHead");
-        } else if (inv.getTitle().contains("§aAdd Normal Items: ")) {
-            event.setCancelled(true);
-            event.setResult(InventoryClickEvent.Result.DENY);
-            if (item.getType().toString().contains("SKULL") || item.getType() == Material.AIR) {
-                player.sendMessage("§cDu kan kun tilføje items");
-                return;
-            }
-            clickedInv.remove(item);
-            inv.addItem(item);
-            player.sendMessage("§aDu har tilføjet et §eItem");
-
-        } else if (inv.getTitle().contains("§aAdd Rare Heads: ")) {
-            event.setCancelled(true);
-            event.setResult(InventoryClickEvent.Result.DENY);
-            if (!item.getType().toString().contains("SKULL")) {
-                player.sendMessage("§cDu kan kun tilføje heads");
-                return;
-            }
-            clickedInv.remove(item);
-            inv.addItem(item);
-            player.sendMessage("§aDu har tilføjet et §6Rare Head");
-
-        } else if (inv.getTitle().contains("§aAdd Rare Items: ")) {
-            event.setCancelled(true);
-            event.setResult(InventoryClickEvent.Result.DENY);
-            VagtVault vagtVault = vagtVaultLoader.getVagtVault(inv.getName().replace("§aAdd Rare Items: ", ""));
-            if (item.getType().toString().contains("SKULL") || item.getType() == Material.AIR) {
-                player.sendMessage("§cDu kan kun tilføje items");
-                return;
-            }
-            clickedInv.remove(item);
-            inv.addItem(item);
-            player.sendMessage("§aDu har tilføjet et §9Rare Item");
-            RareItems rareItems = new RareItems(0.001, item);
-            rareItemsHashMap.put(player, rareItems);
-            editRareItem.setChanceGUI(player, vagtVault, rareItems, inv);
-
-
+        if(item.getType() == Material.AIR) {
+            player.sendMessage("§cDu kan kun tilføje " + type);
+            return;
         }
+        if(type.equals("rareitems")) {
+            handleAddRareItems(player, inv, clickedInv, item);
+            return;
+        }
+        player.getInventory().remove(item);
+        inv.addItem(item);
+        player.sendMessage("§aDu har tilføjet et §e" + type);
+    }
 
+    private void handleAddRareItems(Player player, Inventory inv, Inventory clickedInv, ItemStack item) {
+        VagtVault vagtVault = vagtVaultLoader.getVagtVault(inv.getName().replace("§aAdd Rare Items: ", ""));
+        clickedInv.remove(item);
+        inv.addItem(item);
+        player.sendMessage("§aDu har tilføjet et §9Rare Item");
+        RareItems rareItems = new RareItems(0.001, item);
+        rareItemsHashMap.put(player, rareItems);
+        editRareItem.setChanceGUI(player, vagtVault, rareItems, inv);
     }
 
     @EventHandler
@@ -172,12 +158,16 @@ public class Additems implements Listener {
         String title = inv.getTitle();
 
         if (title.startsWith(ADD_HEADS_TITLE)) {
+            System.out.println("heads");
             handleNormalItemsClose(inv, player, "heads");
         } else if (title.startsWith(ADD_NORMAL_ITEMS_TITLE)) {
+            System.out.println("items");
             handleNormalItemsClose(inv, player, "items");
         } else if (title.startsWith(ADD_RARE_HEADS_TITLE)) {
+            System.out.println("rareHeads");
             handleNormalItemsClose(inv, player,"rareHeads");
         } else if (title.startsWith(ADD_RARE_ITEMS_TITLE)) {
+            System.out.println("rareItems");
             handleRareItemsClose(inv, player);
         } else if (title.startsWith(SET_CHANCE_TITLE)) {
             rareItemsHashMap.remove(player);
@@ -220,13 +210,18 @@ public class Additems implements Listener {
             items.add(item);
 
         }
-        if (type.equals("heads")) {
-            vagtVault.addHeads(items);
-        } else if (type.equals("rareHeads")) {
-            vagtVault.addRareHeads(items);
-        } else {
-            vagtVault.addItems(items);
+        switch (type) {
+            case "heads":
+                vagtVault.addHeads(items);
+                break;
+            case "rareHeads":
+                vagtVault.addRareHeads(items);
+                break;
+            case "items":
+                vagtVault.addItems(items);
+                break;
         }
+        vagtVaultLoader.save(vagtVault);
         back(player, vagtVault);
     }
 

@@ -1,0 +1,54 @@
+vagtVaults:
+  tt:
+    name: tt
+    location:
+      ==: org.bukkit.Location
+      world: B
+      x: -106.0
+      y: 122.0
+      z: -173.0
+      pitch: 0.0
+      yaw: 0.0
+    resetTime: 30
+    failresetTime: 10
+    standStillTime: 10
+    headChance: 0.0
+    rareHeadChance: 0.0
+    boardcastMessage: §4%player% §7er igang med at §4røve §6%vagtvault_name%
+    playerMessage: §7Du er igang med at §4røve §6%vagtvault_name% du skal stå stille i §4%vagtvault_standstill% §7sekunder
+    sendBoardcast: false
+    minVagtOnline: 1
+    needItem: true
+    item:
+      - ==: org.bukkit.inventory.ItemStack
+        type: DIAMOND_SWORD
+    rareItems:
+      - ==: com.gmail.markushygedombrowski.items.RareItems
+        chance: 0.002
+        item: |
+          item:
+            ==: org.bukkit.inventory.ItemStack
+            type: STAINED_GLASS_PANE
+            damage: 14
+    heads:
+      - ==: org.bukkit.inventory.ItemStack
+        type: SKULL_ITEM
+        damage: 3
+        meta:
+          ==: ItemMeta
+          meta-type: SKULL
+          display-name: §9Orb (green)
+          internal: H4sIAAAAAAAAAE2PQU+DMBzF/5qYIPFjeCUpK0M5eDB2upK1uI0B5cagDLCdywZu3efyA8rRd3v5vd/h2QA2PKy/BqU+j991q6QFt7SCR+QhLygD5FRYBo7nT1wnKIvaQWOKosAYP2Mb7FE6yGPfytM9WL289MNRnmwAuLHgLinUIOFXmhDlWYOqLFSlof7Y4zVSEe0OT3SfmO0b9ake+fzVX5jg33baF+lUCRw2+X45bHWCFnil5Hzllnrzw7qk5WneiLhRnOwuueZtRFad0Ilm6cYV16VhH8uJiHcXEeeKd43m6ezMr5szI+8NI9SLCHVFygwjMy9PQ8VNGNQZehkfwB/3fL7THAEAAA==
+    rareHeads:
+      - ==: org.bukkit.inventory.ItemStack
+        type: SKULL_ITEM
+        damage: 3
+        meta:
+          ==: ItemMeta
+          meta-type: SKULL
+          internal: H4sIAAAAAAAAAE2PS27CMBiE/1aqRKMeo9tIzoNUXnSBGgS2cNKEQIl3ITHNw6YoJIA5Vw9YLzu7mflmMRaABS/rbpTys/85NFJM4JFU8Ip85OMSI7vyBLb9wHVsXBYHGxkVReEjFDgWWGZ0Ev3QiPMzTAZxG8ZenC0AeJjA07aQo4BfoSniuxpVOypLTQLjszWSMWlPb+S41fsPEhBl+uUsWGn8j50OxddU5h6t+TEZ92qLVl4qxTJ1SrW5xBntIpe5uUq7POMdDxPNF6li9+QaLeY6CsmVZ8yJws2Nh/MrW9CWhTPNDJcr2sRZVEf3SvGWuOxemvxbszXFhx16Nw/gDwmQrnMcAQAA
+    items:
+      - ==: org.bukkit.inventory.ItemStack
+        type: DIAMOND
+
+
