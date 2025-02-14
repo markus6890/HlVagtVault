@@ -65,6 +65,9 @@ public class VagtVaultLoader {
         config.set("vagtVaults." + vagtVault.getName() + ".resetTime", vagtVault.getResetTime());
         config.set("vagtVaults." + vagtVault.getName() + ".failresetTime", vagtVault.getFailresetTime());
         config.set("vagtVaults." + vagtVault.getName() + ".standStillTime", vagtVault.getStandStillTime());
+        if(vagtVault.getItems() == null) {
+            vagtVault.setItems(new ArrayList<>());
+        }
         config.set("vagtVaults." + vagtVault.getName() + ".items", convertItemStack(vagtVault.getItems()));
         config.set("vagtVaults." + vagtVault.getName() + ".heads", vagtVault.getHeads());
         config.set("vagtVaults." + vagtVault.getName() + ".rareItems", vagtVault.getRareItems());
