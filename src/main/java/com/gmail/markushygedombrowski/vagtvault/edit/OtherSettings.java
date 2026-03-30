@@ -10,6 +10,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.HashMap;
@@ -52,14 +53,15 @@ public class OtherSettings implements Listener {
     public void onInventoryClick(InventoryClickEvent event) {
         Player player = (Player) event.getWhoClicked();
         Inventory inv = event.getInventory();
+        InventoryView invView = event.getView();
         int slot = event.getRawSlot();
         ItemStack item = event.getCurrentItem();
-        if (item == null || !inv.getTitle().contains("§eAndre Indstillinger: ")) {
+        if (item == null || !invView.getTitle().contains("§eAndre Indstillinger: ")) {
             return;
         }
         event.setCancelled(true);
         event.setResult(InventoryClickEvent.Result.DENY);
-        VagtVault vagtVault = vagtVaultLoader.getVagtVault(inv.getTitle().replace("§eAndre Indstillinger: ", ""));
+        VagtVault vagtVault = vagtVaultLoader.getVagtVault(invView.getTitle().replace("§eAndre Indstillinger: ", ""));
         if (item.getType() == null || item.getType() == Material.AIR) {
             return;
         }

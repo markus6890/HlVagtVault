@@ -55,7 +55,13 @@ public class RobListener implements Listener {
             return;
         }
         if(vagtVault.isNeedItem() && player.getItemInHand().getType() != vagtVault.getRobberyItem().getType()) {
-            player.sendMessage("§7[§9Vagt Vault§7] Du skal have §4" + vagtVault.getRobberyItem().getItemMeta().getDisplayName() + " §7for at røve");
+            String itemName;
+            if(vagtVault.getRobberyItem().getItemMeta().hasDisplayName()) {
+                itemName = vagtVault.getRobberyItem().getItemMeta().getDisplayName();
+            } else {
+                itemName = vagtVault.getRobberyItem().getType().name();
+            }
+            player.sendMessage("§7[§9Vagt Vault§7] Du skal have §4" + itemName + " §7for at røve");
             return;
         }
         if(vagtVault.isSendBoardcast()) {

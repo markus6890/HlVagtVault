@@ -14,6 +14,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.material.Wool;
@@ -36,7 +37,6 @@ public class EditRareItem implements Listener {
 
     public void setChanceGUI(Player player, VagtVault vagtVault, RareItems rareItems, Inventory backInv) {
         Inventory inv = Bukkit.createInventory(player, 9, "§aSet Rare Item Chance: " + vagtVault.getName());
-
         Wool wool = new Wool(DyeColor.GREEN);
         Wool wool1 = new Wool(DyeColor.RED);
         ItemStack setChance = wool.toItemStack(1);
@@ -77,19 +77,21 @@ public class EditRareItem implements Listener {
     public void setChanceGUIListener(InventoryClickEvent event) {
         Player player = (Player) event.getWhoClicked();
         Inventory inv = event.getInventory();
+        InventoryView view = event.getView();
         int slot = event.getRawSlot();
         ItemStack item = event.getCurrentItem();
         if (item == null) {
             return;
         }
-        if (inv.getTitle().contains("§aSet Rare Item Chance: ")) {
+        if (view.getTitle().contains("§aSet Rare Item Chance: ")) {
             event.setCancelled(true);
             event.setResult(InventoryClickEvent.Result.DENY);
-            VagtVault vagtVault = vagtVaultLoader.getVagtVault(inv.getTitle().replace("§aSet Rare Item Chance: ", ""));
+            VagtVault vagtVault = vagtVaultLoader.getVagtVault(view.getTitle().replace("§aSet Rare Item Chance: ", ""));
             RareItems rareItems = rareItemsHashMap.get(player);
             double chance = rareItems.getChance();
             if (slot == 1) {
                 rareItems.setChance(chance + 1);
+                upDateInventory(player, inv, rareItems);
             } else if (slot == 2) {
                 rareItems.setChance(chance + 0.001);
             } else if (slot == 6) {
@@ -107,21 +109,26 @@ public class EditRareItem implements Listener {
                 }
                 rareItems.setChance(chance - 1);
             }
-            ItemStack confirm = inv.getItem(4);
-            ItemMeta meta = confirm.getItemMeta();
-            List<String> lore = new ArrayList<>();
-            lore.add("§aChance: " + rareItems.getChance() + "%");
-            meta.setLore(lore);
-            confirm.setItemMeta(meta);
-            inv.setItem(4, confirm);
-            player.updateInventory();
 
 
         }
+    }
+    public void upDateInventory(Player player, Inventory inv, RareItems rareItems) {
+        ItemStack confirm = inv.getItem(4);
+        assert confirm != null;
+        ItemMeta meta = confirm.getItemMeta();
+        List<String> lore = new ArrayList<>();
+        lore.add("§aChance: " + rareItems.getChance() + "%");
+        meta.setLore(lore);
+        confirm.setItemMeta(meta);
+        inv.setItem(4, confirm);
+        player.updateInventory();
     }
 
 
     private void back(Player player) {
         Bukkit.getScheduler().runTaskLater(plugin, () -> player.openInventory(inventoryHashMap.get(player)), 1L);
     }
+
+
 }

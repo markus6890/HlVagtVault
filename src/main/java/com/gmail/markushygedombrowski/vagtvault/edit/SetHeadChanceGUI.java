@@ -3,31 +3,27 @@ package com.gmail.markushygedombrowski.vagtvault.edit;
 import com.gmail.markushygedombrowski.HLVagtVault;
 import com.gmail.markushygedombrowski.config.VagtVault;
 import com.gmail.markushygedombrowski.config.VagtVaultLoader;
-import com.gmail.markushygedombrowski.items.RareItems;
 import org.bukkit.Bukkit;
-import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.material.Wool;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 public class SetHeadChanceGUI implements Listener {
-    private HashMap<Player, Inventory> inventoryHashMap = new HashMap<>();
-    private HashMap<Player, String> headTypeHashMap = new HashMap<>();
-    private HashMap<Player, VagtVault> vagtVaultHashMap = new HashMap<>();
+    private final HashMap<Player, Inventory> inventoryHashMap = new HashMap<>();
+    private final HashMap<Player, String> headTypeHashMap = new HashMap<>();
+    private final HashMap<Player, VagtVault> vagtVaultHashMap = new HashMap<>();
 
-    private VagtVaultLoader vagtVaultLoader;
-    private HLVagtVault plugin;
+    private final VagtVaultLoader vagtVaultLoader;
+    private final HLVagtVault plugin;
 
     public SetHeadChanceGUI(VagtVaultLoader vagtVaultLoader, HLVagtVault plugin) {
         this.vagtVaultLoader = vagtVaultLoader;
@@ -36,12 +32,10 @@ public class SetHeadChanceGUI implements Listener {
 
     public void setChanceGUI(Player player, VagtVault vagtVault, Inventory backInv, String headType) {
         Inventory inv = Bukkit.createInventory(player, 9, "§aSet " + headType + " Head Chance: " + vagtVault.getName());
-        Wool wool = new Wool(DyeColor.GREEN);
-        Wool wool1 = new Wool(DyeColor.RED);
-        ItemStack setChance = wool.toItemStack(1);
-        ItemStack addChance1 = wool.toItemStack(1);
-        ItemStack removeChance = wool1.toItemStack(1);
-        ItemStack removeChance1 = wool1.toItemStack(1);
+        ItemStack setChance = new ItemStack(Material.GREEN_WOOL);
+        ItemStack addChance1 = new ItemStack(Material.GREEN_WOOL);
+        ItemStack removeChance = new ItemStack(Material.RED_WOOL);
+        ItemStack removeChance1 = new ItemStack(Material.RED_WOOL);
         ItemStack confirm = new ItemStack(Material.EMERALD_BLOCK);
 
         ItemMeta setChanceMeta = setChance.getItemMeta();
@@ -84,18 +78,18 @@ public class SetHeadChanceGUI implements Listener {
     public void setChanceGUIListener(InventoryClickEvent event) {
         Player player = (Player) event.getWhoClicked();
         Inventory inv = event.getInventory();
+        InventoryView invView = event.getView();
         int slot = event.getRawSlot();
         ItemStack item = event.getCurrentItem();
         if (item == null) {
             return;
         }
-        if (inv.getTitle().contains(" Head Chance: ")) {
+        if (invView.getTitle().contains(" Head Chance: ")) {
             event.setCancelled(true);
             event.setResult(InventoryClickEvent.Result.DENY);
             VagtVault vagtVault = vagtVaultHashMap.get(player);
             String headType = headTypeHashMap.get(player);
             double chance;
-            double chancechange = 0;
             if (headType.equalsIgnoreCase("Rare")) {
                 chance = vagtVault.getRareHeadChance();
             } else {

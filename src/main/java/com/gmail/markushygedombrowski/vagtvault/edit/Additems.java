@@ -14,6 +14,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.material.Wool;
@@ -68,15 +69,15 @@ public class Additems implements Listener {
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
         Player player = (Player) event.getWhoClicked();
-        Inventory inv = event.getInventory();
+        InventoryView view = event.getView();
         int slot = event.getRawSlot();
         ItemStack item = event.getCurrentItem();
-        if (item == null || !inv.getTitle().contains("§aAdd Items: ")) {
+        if (item == null || !view.getTitle().contains("§aAdd Items: ")) {
             return;
         }
         event.setCancelled(true);
         event.setResult(InventoryClickEvent.Result.DENY);
-        VagtVault vagtVault = vagtVaultLoader.getVagtVault(inv.getName().replace("§aAdd Items: ", ""));
+        VagtVault vagtVault = vagtVaultLoader.getVagtVault(view.getTitle().replace("§aAdd Items: ", ""));
         switch (slot) {
             case ADDITEMS_INDEX:
                 openInventory(player, vagtVault, ADD_NORMAL_ITEMS_TITLE);
@@ -108,16 +109,17 @@ public class Additems implements Listener {
         Inventory inv = event.getView().getTopInventory();
         Inventory clickedInv = event.getClickedInventory();
         ItemStack item = event.getCurrentItem();
+        InventoryView view = event.getView();
 
         if (item == null) return;
 
-        if (inv.getTitle().contains("§aAdd Heads: ")) {
+        if (view.getTitle().contains("§aAdd Heads: ")) {
             handleAddItems(event, player, inv, clickedInv, item, "heads");
-        } else if (inv.getTitle().contains("§aAdd Normal Items: ")) {
+        } else if (view.getTitle().contains("§aAdd Normal Items: ")) {
             handleAddItems(event, player, inv, clickedInv, item, "items");
-        } else if (inv.getTitle().contains("§aAdd Rare Heads: ")) {
+        } else if (view.getTitle().contains("§aAdd Rare Heads: ")) {
             handleAddItems(event, player, inv, clickedInv, item, "Rare heads");
-        } else if (inv.getTitle().contains("§aAdd Rare Items: ")) {
+        } else if (view.getTitle().contains("§aAdd Rare Items: ")) {
             handleAddItems(event, player, inv, clickedInv, item, "rareitems");
         }
     }
@@ -133,7 +135,7 @@ public class Additems implements Listener {
             return;
         }
         if(type.equals("rareitems")) {
-            handleAddRareItems(player, inv, clickedInv, item);
+            handleAddRareItems(player, inv, clickedInv, item,event.getView());
             return;
         }
         player.getInventory().remove(item);
@@ -141,8 +143,9 @@ public class Additems implements Listener {
         player.sendMessage("§aDu har tilføjet et §e" + type);
     }
 
-    private void handleAddRareItems(Player player, Inventory inv, Inventory clickedInv, ItemStack item) {
-        VagtVault vagtVault = vagtVaultLoader.getVagtVault(inv.getName().replace("§aAdd Rare Items: ", ""));
+    private void handleAddRareItems(Player player, Inventory inv, Inventory clickedInv, ItemStack item,InventoryView view) {
+
+        VagtVault vagtVault = vagtVaultLoader.getVagtVault(view.getTitle().replace("§aAdd Rare Items: ", ""));
         clickedInv.remove(item);
         inv.addItem(item);
         player.sendMessage("§aDu har tilføjet et §9Rare Item");
@@ -154,38 +157,40 @@ public class Additems implements Listener {
     @EventHandler
     public void onInventoryClose(InventoryCloseEvent event) {
         Inventory inv = event.getInventory();
+        InventoryView view = event.getView();
         Player player = (Player) event.getPlayer();
-        String title = inv.getTitle();
+        String title = view.getTitle();
 
         if (title.startsWith(ADD_HEADS_TITLE)) {
             System.out.println("heads");
-            handleNormalItemsClose(inv, player, "heads");
+            handleNormalItemsClose(inv, player, "heads",view);
         } else if (title.startsWith(ADD_NORMAL_ITEMS_TITLE)) {
             System.out.println("items");
-            handleNormalItemsClose(inv, player, "items");
+            handleNormalItemsClose(inv, player, "items",view);
         } else if (title.startsWith(ADD_RARE_HEADS_TITLE)) {
             System.out.println("rareHeads");
-            handleNormalItemsClose(inv, player,"rareHeads");
+            handleNormalItemsClose(inv, player,"rareHeads",view);
         } else if (title.startsWith(ADD_RARE_ITEMS_TITLE)) {
             System.out.println("rareItems");
-            handleRareItemsClose(inv, player);
+            handleRareItemsClose(player,view);
         } else if (title.startsWith(SET_CHANCE_TITLE)) {
             rareItemsHashMap.remove(player);
         }
 
     }
 
-    public void handleRareItemsClose(Inventory inv, Player player) {
+    public void handleRareItemsClose(Player player,InventoryView view) {
+
         if (rareItemsHashMap.containsKey(player)) {
             return;
         }
-        back(player, vagtVaultLoader.getVagtVault(inv.getTitle().replace("§aAdd Rare Items: ", "")));
+        back(player, vagtVaultLoader.getVagtVault(view.getTitle().replace("§aAdd Rare Items: ", "")));
     }
 
 
 
-    private void handleNormalItemsClose(Inventory inv, Player player, String type) {
-        String title = inv.getTitle();
+    private void handleNormalItemsClose(Inventory inv, Player player, String type, InventoryView view) {
+        String title = view.getTitle();
         String vvName = title.substring(title.indexOf(":") + 1).trim();
         VagtVault vagtVault = vagtVaultLoader.getVagtVault(vvName);
         if (vagtVault == null) {

@@ -10,6 +10,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
@@ -52,18 +53,18 @@ public class NeedItemToRob implements Listener {
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
         Player player = (Player) event.getWhoClicked();
-        Inventory inv = event.getInventory();
+        InventoryView invView = event.getView();
         int slot = event.getRawSlot();
         ItemStack item = event.getCurrentItem();
-        if (item == null || !inv.getTitle().contains("§eNeed Item To Rob")) {
+        if (item == null || !invView.getTitle().contains("§eNeed Item To Rob")) {
             return;
         }
         event.setCancelled(true);
         event.setResult(InventoryClickEvent.Result.DENY);
-        if (item.getType() == null || item.getType() == Material.AIR) {
+        if (item.getType() == Material.AIR) {
             return;
         }
-        VagtVault vagtVault = vagtVaultLoader.getVagtVault(inv.getTitle().replace("§eNeed Item To Rob ", ""));
+        VagtVault vagtVault = vagtVaultLoader.getVagtVault(invView.getTitle().replace("§eNeed Item To Rob ", ""));
         if (slot == NEED_ITEM_INDEX) {
             vagtVault.setNeedItem(!vagtVault.isNeedItem());
             vagtVaultLoader.save(vagtVault);

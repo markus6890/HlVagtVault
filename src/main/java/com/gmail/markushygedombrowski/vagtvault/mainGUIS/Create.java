@@ -15,6 +15,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.util.BlockIterator;
@@ -68,22 +69,24 @@ public class Create implements Listener {
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
         Player player = (Player) event.getWhoClicked();
+        InventoryView invView = event.getView();
         Inventory inv = event.getInventory();
         int slot = event.getRawSlot();
         ItemStack item = event.getCurrentItem();
         if (item == null) {
             return;
         }
-        if (inv.getTitle().contains("§eVagtVault: ")) {
+        if (invView.getTitle().contains("§eVagtVault: ")) {
             event.setCancelled(true);
             event.setResult(InventoryClickEvent.Result.DENY);
             VagtVault vagtVault;
-            if (vagtVaultLoader.getVagtVault(inv.getName().replace("§eVagtVault: ", "")) == null) {
-                vagtVault = new VagtVault(inv.getName().replace("§eVagtVault: ", ""), getTargetBlock(player, 5).getLocation(), 30, 10, 10);
+            if (vagtVaultLoader.getVagtVault(invView.getTitle().replace("§eVagtVault: ", "")) == null) {
+                vagtVault = new VagtVault(invView.getTitle().replace("§eVagtVault: ", ""), getTargetBlock(player, 5).getLocation(), 30, 10, 10);
 
                 vagtVaultLoader.save(vagtVault);
             } else {
-                vagtVault = vagtVaultLoader.getVagtVault(inv.getName().replace("§eVagtVault: ", ""));
+                vagtVault = vagtVaultLoader.getVagtVault(invView.getTitle().replace("§eVagtVault: ", ""));
+                vagtVaultLoader.save(vagtVault);
             }
             if (slot == ADD_ITEM) {
                 additems.create(player, vagtVault, inv);
